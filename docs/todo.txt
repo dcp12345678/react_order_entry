@@ -1,0 +1,10 @@
+o  Get rid of unnecessary functions in App.js (e.g. setSessionId, etc.) - done
+o  Rename Auth.js to AuthApi.js and Orders.js to OrdersApi.js and make related code changes - done
+o  Handle security (they shouldn't be able to access other pages if they haven't logged in) - done
+o  Build component for adding/editing orders - done
+o  Implement search function for orders - done
+o  Figure out if navbar can be shared - done
+o  Clean up all warnings - done
+o  Get linter configured using tc rules - done
+o  Clean up propType warnings show in console
+o  Learn how to document the code properly

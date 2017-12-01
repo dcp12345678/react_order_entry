@@ -1,0 +1,12 @@
+{
+  "extends": "eslint-config-topcoder/react",
+  "globals": {
+    "document": true,
+    "sessionStorage": true
+  },
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  }
+}

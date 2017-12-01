@@ -1,0 +1,20 @@
+.top5 { margin-top:5px; }
+
+.top2 { margin-top:2px; }
+
+.top10 { margin-top: 10px; }
+
+.top20 { margin-top: 20px; }
+
+.bottom10 { margin-bottom: 10px; }
+
+.left5 { margin-left:5px; }
+
+.text-align-left { text-align: left !important; }
+
+.text-align-right { text-align: right !important; }
+
+.col-centered{
+    float: none;
+    margin: 0 auto;
+}

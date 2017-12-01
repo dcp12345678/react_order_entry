@@ -1,0 +1,6 @@
+
+C:\src\sandbox\react\react_order_entry\src\index.js
+  30:3  error  JSX not allowed in files with extension '.js'  react/jsx-filename-extension
+
+✖ 1 problem (1 error, 0 warnings)
+
