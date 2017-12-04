@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import './App.css';
@@ -12,7 +13,7 @@ const App = (props) => (
 );
 
 App.propTypes = {
-  children: React.PropTypes.arrayOf(React.PropTypes.element),
+  children: PropTypes.arrayOf(PropTypes.element),
 };
 
 export default App;

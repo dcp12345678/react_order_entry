@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import _ from 'lodash';
 import co from 'co';
 import update from 'immutability-helper';
@@ -339,7 +340,7 @@ class EditOrder extends Component {
 }
 
 EditOrder.propTypes = {
-  params: React.PropTypes.object,
+  params: PropTypes.object,
 };
 
 export default EditOrder;

@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import App from '../App';
 
 class AppWrapper extends Component {
@@ -28,7 +29,7 @@ class AppWrapper extends Component {
 }
 
 AppWrapper.propTypes = {
-  children: React.PropTypes.arrayOf(React.PropTypes.element),
+  children: PropTypes.arrayOf(PropTypes.element),
 };
 
 export default AppWrapper;

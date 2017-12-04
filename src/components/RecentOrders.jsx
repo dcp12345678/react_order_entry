@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import _ from 'lodash';
 import ClassNames from 'classnames';
 import {Table, Grid, Row, Col} from 'react-bootstrap';
@@ -80,7 +81,7 @@ class RecentOrders extends Component {
 }
 
 RecentOrders.propTypes = {
-  userId: React.PropTypes.number,
+  userId: PropTypes.number,
 };
 
 export default RecentOrders;

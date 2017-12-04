@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import _ from 'lodash';
 import { Table, Grid, Row, Col, Button } from 'react-bootstrap';
 import { browserHistory, hashHistory } from 'react-router';
@@ -95,7 +96,7 @@ class OrderDetails extends Component {
 }
 
 OrderDetails.propTypes = {
-  params: React.PropTypes.object,
+  params: PropTypes.object,
 };
 
 export default OrderDetails;
