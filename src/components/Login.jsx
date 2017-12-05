@@ -1,10 +1,10 @@
-import React, {Component} from 'react';
-import {hashHistory} from 'react-router';
-import {ToastContainer, ToastMessage} from 'react-toastr';
+import React, { Component } from 'react';
+import { hashHistory } from 'react-router';
+import { ToastContainer, toast } from 'react-toastify';
 import AuthApi from '../api/AuthApi';
 import Helper from '../helpers/Helper';
+import Button from 'react-bootstrap-button-loader';
 
-const ToastMessageFactory = React.createFactory(ToastMessage.animation);
 const authApi = new AuthApi();
 
 class Login extends Component {
@@ -13,7 +13,7 @@ class Login extends Component {
     super(props);
 
     // initial state
-    this.state = {loginId: '', password: ''};
+    this.state = { loginId: '', password: '', isLoginInProgress: false };
   }
 
   componentDidMount() {
@@ -21,7 +21,7 @@ class Login extends Component {
   }
 
   setLoginId = (event) => {
-    this.setState({loginId: event.target.value});
+    this.setState({ loginId: event.target.value });
   }
 
   setPassword = () => {
@@ -29,39 +29,34 @@ class Login extends Component {
     // const domNode = ReactDOM.findDOMNode(this.passwordInput);
     // const value = domNode.value;
     const value = this.passwordInput.value;
-    this.setState({password: value});
+    this.setState({ password: value });
   }
 
-  doLogin = (event) => {
+  doLogin = async (event) => {
+    this.setState({ isLoginInProgress: true });
     event.preventDefault();
     if (Helper.isNullOrWhitespace(this.state.loginId) || Helper.isNullOrWhitespace(this.state.password)) {
-      this.toastContainer.error('',
-        'You must enter a login Id and password!', {
-          timeOut: 2000,
-          preventDuplicates: false,
-        });
+      this.setState({ isLoginInProgress: false });
+      toast.error('You must enter a login Id and password!', { autoClose: 3000 });
     } else {
-      authApi.login(this.state.loginId, this.state.password).then((loginResult) => {
+      try {
+        let loginResult = await authApi.login(this.state.loginId, this.state.password);
         const obj = JSON.parse(loginResult.text);
-        // this.props.auth.setToken(authResult.accessToken);
         if (obj.result === 'successful login') {
-          Helper.setSessionStorageObject('userDetails', {userId: obj.userId, sessionId: obj.sessionId});
+          this.setState({ isLoginInProgress: false });
+          Helper.setSessionStorageObject('userDetails', { userId: obj.userId, sessionId: obj.sessionId });
           hashHistory.push('/main');
         } else {
-          this.toastContainer.error('',
-            obj.result, {
-              timeOut: 3000,
-              preventDuplicates: false,
-            });
+          this.setState({ isLoginInProgress: false });
+          toast.error(obj.result);
           hashHistory.push('/login');
         }
-      }).catch((err) => {
-        this.toastContainer.error('',
-          `${err.response || '-- could not login'}`, {
-            timeOut: 3000,
-            preventDuplicates: false,
-          });
-      });
+      } catch (err) {
+        this.setState({ isLoginInProgress: false });
+        toast.error(`${err.response || '-- could not login'}`, {
+          autoClose: 3000
+        });
+      }
     }
   }
 
@@ -70,12 +65,8 @@ class Login extends Component {
       <div>
         <h2>Please enter your login credentials:</h2>
         <div>
-          <ToastContainer
-            toastMessageFactory={ToastMessageFactory}
-            ref={(element) => (this.toastContainer = element)} className="toast-top-right"
-          />
+          <ToastContainer position={toast.POSITION.TOP_CENTER} autoClose={5000} />
         </div>
-
         <form>
           <div className="container-fluid">
             <div className="row top5">
@@ -87,7 +78,7 @@ class Login extends Component {
               <div className="col-sm-7 text-left"><input type='password' ref={(element) => (this.passwordInput = element)} onChange={this.setPassword} /></div>
             </div>
             <div className="row top5">
-              <div className="col-sm-7 col-sm-offset-5 text-left"><button type="submit" className="btn-success" onClick={this.doLogin}>Login</button></div>
+              <div className="col-sm-7 col-sm-offset-5 text-left"><Button type="submit" loading={this.state.isLoginInProgress} className="btn-success" onClick={this.doLogin}>Login</Button></div>
             </div>
           </div>
         </form>

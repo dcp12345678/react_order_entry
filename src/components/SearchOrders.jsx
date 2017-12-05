@@ -4,7 +4,6 @@ import _ from 'lodash';
 import ClassNames from 'classnames';
 import {Table, Grid, Row, Col, Button} from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
-import co from 'co';
 import moment from 'moment';
 import NumericInput from 'react-numeric-input';
 import {Link, browserHistory} from 'react-router';
@@ -28,7 +27,7 @@ class SearchOrders extends Component {
     };
   }
 
-  search = () => {
+  search = async () => {
     const criteria = {};
     if (this.state.orderId !== null) {
       criteria.id = this.state.orderId;
@@ -40,19 +39,19 @@ class SearchOrders extends Component {
       criteria.createDateEnd = moment(this.state.createDateEnd).format('YYYY-MM-DD');
     }
     const self = this;
-    co(function* doSearch() {
-      const res = yield ordersApi.searchOrders(criteria);
+    try {
+      const res = await ordersApi.searchOrders(criteria);
       const orders = JSON.parse(res.text).orders;
       // alert(`search result = ${JSON.stringify(orders, null, 2)}`);
       self.setState({orders, searchWasPerformed: true});
-    }).catch((err) => {
+    } catch (err) {
       self.setState(
         {
           showModalForError: true,
           errorModalTitle: 'Error searching for orders',
           errorModalBody: `Error details: ${err.message} ${err.stack}`,
         });
-    });
+    };
   }
 
   clear = () => {

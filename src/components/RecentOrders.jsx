@@ -1,14 +1,13 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import ClassNames from 'classnames';
-import {Table, Grid, Row, Col} from 'react-bootstrap';
-import {Link} from 'react-router';
-import {ToastContainer, ToastMessage} from 'react-toastr';
+import { Table, Grid, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router';
+import { ToastContainer, toast } from 'react-toastify';
 import OrdersApi from '../api/OrdersApi';
 import Helper from '../helpers/Helper';
 
-const ToastMessageFactory = React.createFactory(ToastMessage.animation);
 const ordersApi = new OrdersApi();
 
 class RecentOrders extends Component {
@@ -16,25 +15,22 @@ class RecentOrders extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {orders: []};
+    this.state = { orders: [] };
   }
 
   componentDidMount() {
     this.getOrders();
   }
 
-  getOrders = () => {
-    ordersApi.getOrdersForUser(this.props.userId).then((res) => {
+  getOrders = async () => {
+    try {
+      let res = await ordersApi.getOrdersForUser(this.props.userId);
       const orders = JSON.parse(res.text);
       // alert('orders = ' + JSON.stringify(orders));
-      this.setState({orders});
-    }).catch((err) => {
-      this.toastContainer.error('',
-        `${err.response || '-- could not get orders for user'}`, {
-          timeOut: 3000,
-          preventDuplicates: false,
-        });
-    });
+      this.setState({ orders });
+    } catch (err) {
+      toast.error(`${'could not get orders for user--' + err.status + '-' + err.description}`);
+    }
   }
 
   render() {
@@ -51,10 +47,7 @@ class RecentOrders extends Component {
       <div>
         <h3>Recent Orders</h3>
         <div>
-          <ToastContainer
-            toastMessageFactory={ToastMessageFactory}
-            ref={(element) => (this.toastContainer = element)} className="toast-top-right"
-          />
+          <ToastContainer position={toast.POSITION.TOP_CENTER} autoClose={5000} />
         </div>
         <Grid className={cls}>
           <Row>

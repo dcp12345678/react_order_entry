@@ -3,12 +3,11 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import { Table, Grid, Row, Col, Button } from 'react-bootstrap';
 import { browserHistory, hashHistory } from 'react-router';
-import { ToastContainer, ToastMessage } from 'react-toastr';
+import { ToastContainer, toast } from 'react-toastify';
 import Helper from '../helpers/Helper';
 import OrdersApi from '../api/OrdersApi';
 import Config from '../config';
 
-const ToastMessageFactory = React.createFactory(ToastMessage.animation);
 const ordersApi = new OrdersApi();
 
 class OrderDetails extends Component {
@@ -22,17 +21,14 @@ class OrderDetails extends Component {
     this.getOrderDetails();
   }
 
-  getOrderDetails = () => {
-    ordersApi.getOrderLineItems(this.props.params.id).then((res) => {
+  getOrderDetails = async () => {
+    try {
+      let res = await ordersApi.getOrderLineItems(this.props.params.id);
       const orderLineItems = JSON.parse(res.text);
       this.setState({ orderLineItems });
-    }).catch((err) => {
-      this.toastContainer.error('',
-        `${err.response || err || '-- could not get order line items for order'}`, {
-          timeOut: 3000,
-          preventDuplicates: false,
-        });
-    });
+    } catch (err) {
+      toast.error(`${'could not get orders for user--' + err.status + '-' + err.description}`);
+    }
   }
 
   editOrder = () => {
@@ -58,10 +54,7 @@ class OrderDetails extends Component {
         {navbarInstance}
         <h3>Order Details for Order Id: {this.props.params.id}</h3>
         <div>
-          <ToastContainer
-            toastMessageFactory={ToastMessageFactory}
-            ref={(element) => (this.toastContainer = element)} className="toast-top-right"
-          />
+          <ToastContainer position={toast.POSITION.TOP_CENTER} autoClose={3000} />
         </div>
         <Grid className="text-align-left">
           <Row className="bottom10" >

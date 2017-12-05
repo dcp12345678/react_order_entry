@@ -62,7 +62,6 @@ class Helper {
   }
 
   static buildNavBar(navItems) {
-    debugger;
     const buildItem = (item, index) => {
       switch (item) {
         case 'newOrder':

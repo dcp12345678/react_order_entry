@@ -1,19 +1,15 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import co from 'co';
 import update from 'immutability-helper';
-import {Table, Grid, Row, Col, Button, Modal} from 'react-bootstrap';
-import {ToastContainer, ToastMessage} from 'react-toastr';
-import {hashHistory} from 'react-router';
+import { Table, Grid, Row, Col, Button, Modal } from 'react-bootstrap';
+import { hashHistory } from 'react-router';
 import OrdersApi from '../api/OrdersApi';
 import LookupApi from '../api/LookupApi';
 import Helper from '../helpers/Helper';
 
 const ordersApi = new OrdersApi();
 const lookupApi = new LookupApi();
-
-const ToastMessageFactory = React.createFactory(ToastMessage.animation);
 
 /**
  * This component is used for editing orders
@@ -34,24 +30,31 @@ class EditOrder extends Component {
       showModalForError: false,
       isNew: this.props.params.id === '-1',
     };
+  }
 
-    const self = this;
-    co(function* init() {
-      let res = yield lookupApi.getColors();
+  componentDidMount = async () => {
+    try {
+      let res = await lookupApi.getColors();
       const colors = JSON.parse(res.text);
-      res = yield lookupApi.getProductTypes();
+      res = await lookupApi.getProductTypes();
       const productTypes = JSON.parse(res.text);
-      self.setState({colors, productTypes});
+      this.setState({ colors, productTypes });
 
       let order;
-      if (!self.state.isNew) {
+      if (!this.state.isNew) {
         // editing an existing order
-        const x = yield ordersApi.getOrder(self.props.params.id);
+        const x = await ordersApi.getOrder(this.props.params.id);
         order = JSON.parse(x.text);
 
         // get available products for each line item on the order
         const promiseResults =
-          yield _.map(order.lineItems, (lineItem) => lookupApi.getProductsForProductType(lineItem.productTypeId));
+          await Promise.all(
+            _.map(
+              order.lineItems,
+              async (lineItem) => await lookupApi.getProductsForProductType(lineItem.productTypeId)
+            )
+          );
+        // load available products to each line item
         _.forEach(order.lineItems, (lineItem, index) => {
           lineItem.availProducts = JSON.parse(promiseResults[index].text);
         });
@@ -62,39 +65,38 @@ class EditOrder extends Component {
         order.lineItems = [];
       }
       order.userId = Helper.getSessionStorageObject('userDetails').userId;
-      self.setState({order, isLoaded: true});
-    }).catch((err) => {
-      self.setState(
+      this.setState({ order, isLoaded: true });
+    } catch (err) {
+      this.setState(
         {
           showModalForError: true,
           errorModalTitle: 'Error initializing form',
           errorModalBody: `Error details: ${err.message} ${err.stack}`,
         });
-    });
+    }
   }
 
   /**
    * Saves the order to persistence
    */
-  saveOrder = () => {
-    const self = this;
-    co(function* save() {
-      const res = yield ordersApi.saveOrder(self.state.order);
+  saveOrder = async () => {
+    try {
+      const res = await ordersApi.saveOrder(this.state.order);
       const resObj = JSON.parse(res.text);
-      self.setState({
+      this.setState({
         showModalForSave: true,
-        order: update(self.state.order, {
-          id: {$set: parseInt(resObj.orderId, 10)},
+        order: update(this.state.order, {
+          id: { $set: parseInt(resObj.orderId, 10) },
         }),
       });
-    }).catch((err) => {
-      self.setState(
+    } catch (err) {
+      this.setState(
         {
           showModalForError: true,
           errorModalTitle: 'Error saving order',
           errorModalBody: `Error details: ${err.message} ${err.stack}`,
         });
-    });
+    }
   }
 
   /**
@@ -122,35 +124,41 @@ class EditOrder extends Component {
       ],
     });
     this.setState({
-      order: update(this.state.order, {lineItems: {$set: updatedLineItems}}),
+      order: update(this.state.order, { lineItems: { $set: updatedLineItems } }),
     });
   }
 
   /**
    * Called when user changes the product type for a line item
    */
-  onProductTypeChanged = (lineItem) => {
+  onProductTypeChanged = async (lineItem) => {
     const selProductType = `selProductType_${lineItem.id}`;
     const lineItems = this.state.order.lineItems;
-    const self = this;
 
-    co(function* handleChange() {
-      const res = yield lookupApi.getProductsForProductType(self[selProductType].value);
-      const productTypeId = parseInt(self[selProductType].value, 10);
+    try {
+      const res = await lookupApi.getProductsForProductType(this[selProductType].value);
+      const productTypeId = parseInt(this[selProductType].value, 10);
       const products = JSON.parse(res.text);
       const updatedLineItem = update(lineItem,
         {
-          availProducts: {$set: products},
-          productTypeId: {$set: productTypeId},
-          productId: {$set: -1}, // deselect any previously selected product
-          colorId: {$set: -1}, // deselect any previously selected color
+          availProducts: { $set: products },
+          productTypeId: { $set: productTypeId },
+          productId: { $set: -1 }, // deselect any previously selected product
+          colorId: { $set: -1 }, // deselect any previously selected color
         }
       );
       const index = _.findIndex(lineItems, ['id', lineItem.id]);
-      const updatedLineItems = update(lineItems, {$splice: [[index, 1, updatedLineItem]]});
-      const updatedOrder = update(self.state.order, {lineItems: {$set: updatedLineItems}});
-      self.setState({order: updatedOrder});
-    });
+      const updatedLineItems = update(lineItems, { $splice: [[index, 1, updatedLineItem]] });
+      const updatedOrder = update(this.state.order, { lineItems: { $set: updatedLineItems } });
+      this.setState({ order: updatedOrder });
+    } catch (err) {
+      this.setState(
+        {
+          showModalForError: true,
+          errorModalTitle: 'Error getting products for product type',
+          errorModalBody: `Error details: ${err.message} ${err.stack}`,
+        });
+    }
   }
 
   /**
@@ -160,11 +168,11 @@ class EditOrder extends Component {
     const selProduct = `selProduct_${lineItem.id}`;
     const lineItems = this.state.order.lineItems;
     const productId = parseInt(this[selProduct].value, 10);
-    const updatedLineItem = update(lineItem, {productId: {$set: productId}});
+    const updatedLineItem = update(lineItem, { productId: { $set: productId } });
     const index = _.findIndex(lineItems, ['id', lineItem.id]);
-    const updatedLineItems = update(lineItems, {$splice: [[index, 1, updatedLineItem]]});
-    const updatedOrder = update(this.state.order, {lineItems: {$set: updatedLineItems}});
-    this.setState({order: updatedOrder});
+    const updatedLineItems = update(lineItems, { $splice: [[index, 1, updatedLineItem]] });
+    const updatedOrder = update(this.state.order, { lineItems: { $set: updatedLineItems } });
+    this.setState({ order: updatedOrder });
   }
 
   /**
@@ -174,11 +182,11 @@ class EditOrder extends Component {
     const selColor = `selColor_${lineItem.id}`;
     const lineItems = this.state.order.lineItems;
     const colorId = parseInt(this[selColor].value, 10);
-    const updatedLineItem = update(lineItem, {colorId: {$set: colorId}});
+    const updatedLineItem = update(lineItem, { colorId: { $set: colorId } });
     const index = _.findIndex(lineItems, ['id', lineItem.id]);
-    const updatedLineItems = update(lineItems, {$splice: [[index, 1, updatedLineItem]]});
-    const updatedOrder = update(this.state.order, {lineItems: {$set: updatedLineItems}});
-    this.setState({order: updatedOrder});
+    const updatedLineItems = update(lineItems, { $splice: [[index, 1, updatedLineItem]] });
+    const updatedOrder = update(this.state.order, { lineItems: { $set: updatedLineItems } });
+    this.setState({ order: updatedOrder });
   }
 
   /**
@@ -187,10 +195,10 @@ class EditOrder extends Component {
   deleteLineItem = () => {
     const lineItems = this.state.order.lineItems;
     const index = _.findIndex(lineItems, ['id', this.state.idToDelete]);
-    const updatedLineItems = update(lineItems, {$splice: [[index, 1]]});
+    const updatedLineItems = update(lineItems, { $splice: [[index, 1]] });
     const order = this.state.order;
-    const updatedOrder = update(order, {lineItems: {$set: updatedLineItems}});
-    this.setState({order: updatedOrder, idToDelete: -1, showModalForDelete: false});
+    const updatedOrder = update(order, { lineItems: { $set: updatedLineItems } });
+    this.setState({ order: updatedOrder, idToDelete: -1, showModalForDelete: false });
   }
 
   /**
@@ -198,7 +206,7 @@ class EditOrder extends Component {
    * @param {Number} id the id of line item to delete
    */
   promptToDeleteLineItem = (id) => {
-    this.setState({idToDelete: id, showModalForDelete: true});
+    this.setState({ idToDelete: id, showModalForDelete: true });
   }
 
   /**
@@ -218,7 +226,7 @@ class EditOrder extends Component {
   render() {
     if (this.state.showModalForError) {
       return Helper.showError(
-        () => this.setState({showModalForError: false}),
+        () => this.setState({ showModalForError: false }),
         this.state.errorModalTitle,
         this.state.errorModalBody);
     }
@@ -268,12 +276,6 @@ class EditOrder extends Component {
       <div>
         {navbarInstance}
         <h3>{this.state.isNew ? 'Create New Order' : `Edit Order ${this.props.params.id}`}</h3>
-        <div>
-          <ToastContainer
-            toastMessageFactory={ToastMessageFactory}
-            ref={(element) => (this.toastContainer = element)} className="toast-top-right"
-          />
-        </div>
         <Grid className="text-align-left">
           <Row>
             <Col sm={4}>
@@ -319,7 +321,7 @@ class EditOrder extends Component {
           </Modal.Body>
           <Modal.Footer>
             <Button bsStyle="danger" bsSize="small" onClick={this.deleteLineItem}>Yes</Button>
-            <Button bsStyle="danger" bsSize="small" onClick={() => this.setState({showModalForDelete: false})}>No</Button>
+            <Button bsStyle="danger" bsSize="small" onClick={() => this.setState({ showModalForDelete: false })}>No</Button>
           </Modal.Footer>
         </Modal>
 
