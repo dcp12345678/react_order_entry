@@ -3,7 +3,8 @@ import { hashHistory } from 'react-router';
 import { ToastContainer, toast } from 'react-toastify';
 import AuthApi from '../api/AuthApi';
 import Helper from '../helpers/Helper';
-import Button from 'react-bootstrap-button-loader';
+import '../loading-btn.css';
+import '../loading.css';
 
 const authApi = new AuthApi();
 
@@ -67,6 +68,7 @@ class Login extends Component {
         <div>
           <ToastContainer position={toast.POSITION.TOP_CENTER} autoClose={5000} />
         </div>
+
         <form>
           <div className="container-fluid">
             <div className="row top5">
@@ -78,7 +80,13 @@ class Login extends Component {
               <div className="col-sm-7 text-left"><input type='password' ref={(element) => (this.passwordInput = element)} onChange={this.setPassword} /></div>
             </div>
             <div className="row top5">
-              <div className="col-sm-7 col-sm-offset-5 text-left"><Button type="submit" loading={this.state.isLoginInProgress} className="btn-success" onClick={this.doLogin}>Login</Button></div>
+              <div className="col-sm-7 col-sm-offset-5 text-left">
+                <div onClick={this.doLogin} style={{height: "38px"}} className={"btn btn-lg btn-success ld-ext-right hovering " + (this.state.isLoginInProgress ? "running" : "")}>
+                  <div>Login</div>
+                  <div className="ld ld-ring ld-spin">
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </form>
